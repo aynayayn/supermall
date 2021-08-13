@@ -34,20 +34,22 @@
       })
 
       this.scroll.on('scroll', (position) => {
-        // this.$emit('scroll', position);
-      })
-
-      this.scroll.on('pullingUp', () => {
-        this.$emit('pullingUp');
+        if(-position.y == 800) {
+          this.$emit('scroll');
+        }
       })
     },
     methods: {
       scrollTo(x, y, time = 300) {
-        this.scroll.scrollTo(x, y, time);
+        this.scroll && this.scroll.scrollTo(x, y, time);
       },
       finishPullUp() {
-        this.scroll.finishPullUp();
-      }
+        this.scroll && this.scroll.finishPullUp();
+      },
+      refresh() {
+        console.log('----');
+        this.scroll && this.scroll.refresh();
+      },
     }
   }
 </script>

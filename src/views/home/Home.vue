@@ -6,8 +6,8 @@
     <scroll class="content"
             ref="scroll"
             :probe-type = "3"
-            :pull-up-load = "true"
-            @pullingUp="loadMore">
+            @scroll="contentScroll"
+            :pull-up-load = "true">
       <home-swiper :banners="banners"></home-swiper>
       <home-recommend-view :recommends="recommends"></home-recommend-view>
       <home-feature-view></home-feature-view>
@@ -65,7 +65,7 @@
     computed: {
       showGoods() {
         return this.goods[this.currentType].list
-      }
+      },
     },
     created() {
       //1.请求多个数据
@@ -75,8 +75,29 @@
       this.getHomeGoods('pop');
       this.getHomeGoods('new');
       this.getHomeGoods('sell');
+
+    },
+    mounted() {
+     /* this.$bus.$on('itemImageLoad', () => {
+        //在mounted阶段也不定找得到$refs.scroll
+        this.$refs.scroll && this.$refs.scroll.refresh();
+      })*/
+      const refresh = this.debounce(this.$refs.scroll.refresh, 500)
+      this.$bus.$on('itemImageLoad', () => {
+        refresh();
+      })
     },
     methods: {
+      debounce(func, delay) {
+        let timer = null;
+        return function(...args) {
+          if(timer)  clearTimeout(timer)
+
+          timer = setTimeout(() => {
+            func.apply(this, args)
+          }, delay)
+        }
+      },
       /**
        * 事件监听相关的方法
        */
@@ -87,6 +108,7 @@
             break;
           case 1:
             this.currentType = 'new';
+            console.log(this.imgLoadedCount);
             break;
           case 2:
             this.currentType = 'sell';
@@ -97,14 +119,8 @@
         // 在500毫秒之内滚到最上方
         this.$refs.scroll.scrollTo(0, 0, 500);
       },
-      contentScroll(position) {
-        this.isShow = -position.y > 1000;
-      },
-      loadMore() {
-        this.getHomeGoods(this.currentType);
-        // 重新计算最新的可滚动高度
-        this.$refs.scroll.scroll.refresh();
-        this.$refs.scroll.finishPullUp();
+      contentScroll() {
+        this.isShow = !this.isShow;
       },
 
       /**
@@ -123,6 +139,15 @@
           this.goods[type].page += 1;
         })
       },
+    },
+    watch: {
+      /*"$store.state.imgLoadedCount": {
+        // 需要实时监听对象属性的变化得将deep属性设置为true
+        deep: false,
+        handler: function(){
+          this.$refs.scroll.scroll.refresh();
+        }
+      }*/
     }
   }
 </script>
