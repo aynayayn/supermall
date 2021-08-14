@@ -33,11 +33,19 @@
         click: true
       })
 
-      this.scroll.on('scroll', (position) => {
-        if(-position.y == 800) {
-          this.$emit('scroll');
-        }
-      })
+      // 监听滚动的位置
+      if(this.probeType == 2 || this.probeType == 3){
+        this.scroll.on('scroll', (position) => {
+          this.$store.commit('setScrollHeight',position.y)
+        })
+      }
+
+      // 监听scroll滚动到底部
+      if(this.pullUpLoad) {
+        this.scroll.on('pullingUp', () => {
+          this.$emit('pullingUp');
+        })
+      }
     },
     methods: {
       scrollTo(x, y, time = 300) {
@@ -47,7 +55,7 @@
         this.scroll && this.scroll.finishPullUp();
       },
       refresh() {
-        console.log('----');
+        // console.log('----');
         this.scroll && this.scroll.refresh();
       },
     }
