@@ -6,12 +6,15 @@
       <div class="desc">{{detailInfo.desc}}</div>
       <div class="end"></div>
     </div>
-    <div class="info-key">{{detailInfo.detailImage[0].key}}</div>
-    <div class="info-list">
-      <img v-for="(item, index) in detailInfo.detailImage[0].list"
-           :src="item"
-           alt=""
-           @load="imgLoad">
+    <div v-for="item1 in detailInfo.detailImage">
+      <div class="info-key">{{item1.key}}</div>
+      <div class="info-list">
+        <img v-for="(item2, index) in item1.list"
+             :src="item2"
+             :key="index"
+             alt=""
+             @load="imgLoad">
+      </div>
     </div>
   </div>
 </template>
@@ -21,25 +24,29 @@
 		name: "DetailGoodsInfo",
     props: {
       detailInfo: {
-        type: Object
-      }
+        type: Object,
+        default() {
+          return {}
+        }
+      },
     },
     data() {
 		  return {
 		    loadCounter: 0,
-        imagesLength: 0,
+        imagesArray1Length: 0,
       }
     },
     methods: {
 		  imgLoad() {
-        if(++this.loadCounter ===  this.imagesLength) {
+        if(++this.loadCounter ===  this.imagesArray1Length) {
           this.$emit('imgLoad');
         }
       }
     },
     watch: {
+		  // 在数据还未到达时detailInfo为空对象，在有数据之后，将imagesArray1Length赋值
 		  detailInfo() {
-		    this.imagesLength = this.detailInfo.detailImage[0].list.length;
+		    this.imagesArray1Length = this.detailInfo.detailImage[0].list.length;
       }
     }
 	}
