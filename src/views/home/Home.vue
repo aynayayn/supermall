@@ -42,9 +42,12 @@
 
   import {getHomeMultidata, getHomeGoods} from "network/home";
   import {debounce} from "common/utils";
+  // 三、只emit一个事件并在不同组件中实现各自不同时段的监听【混入操作】 - 第2处代码
+  import {itemListener} from "common/mixin";
 
   export default {
     name: "Home",
+    mixins: [itemListener],// 三、只emit一个事件并在不同组件中实现各自不同时段的监听【混入操作】 - 第3处代码
     components: {
       Scroll,
       HomeSwiper,
@@ -69,7 +72,8 @@
         isShowBackTop: false,
         tabOffsetTop: 0,
         isShowTabControl: false,
-        saveY: 0
+        saveY: 0,
+        // itemImageLoad: null, // 二、只emit一个事件并在不同组件中实现各自不同时段的监听 - 第2处代码
       }
     },
     computed: {
@@ -88,19 +92,32 @@
 
     },
     mounted() {
-      //1.图片加载完成的事件监听
-     /* this.$bus.$on('itemImageLoad', () => {
+      // 图片加载完成的事件监听【没有防抖处理】
+      /*this.$bus.$on('itemImageLoad', () => {
         //在mounted阶段也不定找得到$refs.scroll
         this.$refs.scroll && this.$refs.scroll.refresh();
       })*/
-      const refresh = debounce(this.$refs.scroll.refresh, 500)
-      this.$bus.$on('itemImageLoad', () => {
-        this.$refs.scroll && refresh();
-      })
+
+      // 一、先判断当前路由后使用this.$bus.$emit发射不同的事件 - 第2处代码
+      /* const refresh = debounce(this.$refs.scroll.refresh, 500)
+       this.$bus.$on('homeItemImageLoad', () => {
+         this.$refs.scroll && refresh();
+       })*/
+
+
+      // 二、只emit一个事件并在不同组件中实现各自不同时段的监听 - 第3处代码 - 后面进行了混入操作
+     /*const refresh = debounce(this.$refs.scroll.refresh, 200);
+     this.itemImageLoad = () => {
+       this.$refs.scroll && refresh();
+     }
+     this.$bus.$on('itemImageLoad', this.itemImageLoad);*/
     },
     activated() {
       this.$refs.scroll.refresh();
       this.$refs.scroll.scrollTo(0, this.saveY, 0);
+
+      // 二、只emit一个事件并在不同组件中实现各自不同时段的监听 - 第4处代码
+      /*this.$bus.$on('itemImageLoad', this.itemImageLoad);*/
     },
    /* beforeRouteLeave(from, to, next) {
       this.saveY = this.$refs.scroll.scroll.y;
@@ -110,6 +127,10 @@
       // this.saveY = this.$refs.scroll.scroll.y;
       this.saveY = this.$store.state.scrollHeight;
       console.log(this.saveY);
+
+      // 二、只emit一个事件并在不同组件中实现各自不同时段的监听 - 第5处代码
+      // 三、只emit一个事件并在不同组件中实现各自不同时段的监听【混入操作】 - 第4处代码
+      this.$bus.$off('itemImageLoad', this.itemImageLoad);
     },
     methods: {
       /*debounce(func, delay) {

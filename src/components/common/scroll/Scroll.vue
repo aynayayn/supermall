@@ -37,6 +37,7 @@
       if(this.probeType == 2 || this.probeType == 3){
         this.scroll.on('scroll', (position) => {
           this.$store.commit('setScrollHeight',position.y)
+          this.$emit('scroll', position);
         })
       }
 
@@ -55,7 +56,7 @@
         this.scroll && this.scroll.finishPullUp();
       },
       refresh() {
-        // console.log('----');
+        console.log('----防抖处理测试----');
         this.scroll && this.scroll.refresh();
       },
     }

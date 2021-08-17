@@ -30,6 +30,7 @@
     methods: {
       itemClick(val) {
         this.currentIndex = val;
+        this.$emit('titleClick', val);
       },
       backClick() {
         this.$router.back();

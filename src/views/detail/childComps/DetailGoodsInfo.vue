@@ -13,14 +13,16 @@
              :src="item2"
              :key="index"
              alt=""
-             @load="imgLoad">
+             @load="detailInfoImageLoad">
       </div>
     </div>
   </div>
 </template>
 
 <script>
-	export default {
+	import {debounce} from "common/utils";
+
+  export default {
 		name: "DetailGoodsInfo",
     props: {
       detailInfo: {
@@ -32,22 +34,42 @@
     },
     data() {
 		  return {
-		    loadCounter: 0,
-        imagesArray1Length: 0,
+		    /*loadCounter: 0,
+        imagesArray1Length: 0,*/
+
+		    // 方案2第1处代码
+		    newEmit: null,
       }
     },
+    mounted() {
+      // 方案2第2处代码
+      function imgLoadAndEmit(){
+		    // 目的：对下面这句代码进行防抖处理
+        this.$emit('detailInfoImageLoad');
+      }
+		  this.newEmit = debounce(imgLoadAndEmit, 200);
+    },
     methods: {
-		  imgLoad() {
+		  /*detailInfoImageLoad() {
         if(++this.loadCounter ===  this.imagesArray1Length) {
-          this.$emit('imgLoad');
+          this.$emit('detailInfoImageLoad');
         }
+      }*/
+		  // 方案1第1处代码(下一处代码在Detail.vue中的methods属性中)
+		  /*detailInfoImageLoad() {
+		   this.$emit('detailInfoImageLoad');
+      }*/
+
+      // 方案2第3处代码(第4处代码在Detail.vue中的methods属性中)
+      detailInfoImageLoad() {
+		    this.newEmit();
       }
     },
     watch: {
 		  // 在数据还未到达时detailInfo为空对象，在有数据之后，将imagesArray1Length赋值
-		  detailInfo() {
+		  /*detailInfo() {
 		    this.imagesArray1Length = this.detailInfo.detailImage[0].list.length;
-      }
+      }*/
     }
 	}
 </script>

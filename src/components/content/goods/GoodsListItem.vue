@@ -1,6 +1,6 @@
 <template>
   <div class="goods-item" @click="itemClick">
-    <img :src="goodsItem.show.img" @load="imageLoad" alt="">
+    <img :src="showImage" @load="imageLoad" alt="">
     <div class="goods-info">
       <p>{{goodsItem.title}}</p>
       <span class="price">{{goodsItem.price}}</span>
@@ -24,11 +24,25 @@
       imageLoad() {
         // this.$store.commit('incrementImgLoadedCount');
 
+        // 一、先判断当前路由后使用this.$bus.$emit发射不同的事件 - 第1处代码
+       /* if(this.$route.path.indexOf('/home') !== -1) {
+          this.$bus.$emit('homeItemImageLoad');
+        }
+        if(this.$route.path.indexOf('/detail') !== -1) {
+          this.$bus.$emit('recommendItemImageLoad')
+        }*/
+
+        // 二、只emit一个事件并在不同组件中实现各自不同时段的监听 - 第1处代码
         this.$bus.$emit('itemImageLoad');
       },
       itemClick() {
         this.$router.push('/detail/' + this.goodsItem.iid);
       },
+    },
+    computed: {
+      showImage() {
+        return this.goodsItem.image || this.goodsItem.show.img
+      }
     }
   }
 </script>
