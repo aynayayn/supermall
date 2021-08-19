@@ -24,6 +24,13 @@
         :goods="recommends"
         ref="recommend"></goods-list>
     </scroll>
+    <detail-bottom-bar @addCart="showNumberSelect"></detail-bottom-bar>
+    <detail-product-number-ensure v-if="isRenderNumberSelect"
+                                  @ensureNumber="changeCartListState"
+                                  @cancelClick="hideNumSelect"></detail-product-number-ensure>
+    <back-top
+      @click.native="backTopClick"
+      v-show="isShowBackTop"></back-top>
   </div>
 </template>
 
@@ -35,18 +42,24 @@
   import DetailGoodsInfo from "./childComps/DetailGoodsInfo";
   import DetailParamInfo from "./childComps/DetailParamInfo";
   import DetailCommentInfo from "./childComps/DetailCommentInfo";
+  import DetailBottomBar from "./childComps/DetailBottomBar";
+  import DetailProductNumberEnsure from "./childComps/DetailProductNumberEnsure";
 
   import Scroll from "components/common/scroll/Scroll";
   import GoodsList from "components/content/goods/GoodsList";
+  // 后面使用了混入
+  // import BackTop from "components/content/backTop/BackTop";
 
   import {getDetail, getRecommend,  GoodsInfo, GoodsParam, Shop} from "network/detail"
   import {debounce} from "common/utils";
   // 三、只emit一个事件并在不同组件中实现各自不同时段的监听【混入操作】 - 第5处代码
-  import {itemListener} from "common/mixin";
+  import {itemImageLoadListener, backTopClickListener} from "common/mixin";
+
+  import {mapActions} from 'vuex';
 
   export default {
     name: "Detail",
-    mixins: [itemListener],// 三、只emit一个事件并在不同组件中实现各自不同时段的监听【混入操作】 - 第6处代码
+    mixins: [itemImageLoadListener, backTopClickListener],// 三、只emit一个事件并在不同组件中实现各自不同时段的监听【混入操作】 - 第6处代码
     data() {
       return {
         iid: null,
@@ -59,6 +72,9 @@
         recommends: [],
         // itemImageLoad: null, // 二、只emit一个事件并在不同组件中实现各自不同时段的监听 - 第6处代码
         themeTopYs: [],
+        // isShowBackTop: false, //后面通过混入加入
+        isRenderNumberSelect: false,
+        addToCartNum: 0,
       }
     },
     created() {
@@ -132,6 +148,12 @@
         this.$refs.scroll && refresh();
       }
       this.$bus.$on('itemImageLoad', this.itemImageLoad);*/
+      // 为了等一下使用混入，把回调的函数抽出来
+      /*const refresh = debounce(this.$refs.scroll.refresh, 200);
+      this.itemImageLoad = () => {
+        this.$refs.scroll && refresh();
+      }
+      this.$bus.$on('itemImageLoad', this.itemImageLoad);*/
     },
     /*updated() {
       // updated()中拿的offsetTop数据也是错的，因为当图片加载完成后并不会回调updated。
@@ -149,6 +171,9 @@
       this.$bus.$off('itemImageLoad', this.itemImageLoad);
     },
     methods: {
+      ...mapActions(['changeCartList']),
+
+
       // 方案1第2处代码
       /*detailInfoImageLoad() {
         // 前面有混入。在混入中，在mounted阶段便将debounce(fresh, delay)的返回值进行了保存
@@ -177,6 +202,7 @@
       contentScroll(position) {
         // 1.获取位置的y值
         const positionY = position.y;
+
         // 2.positionY和this.themeTopYs中的值进行对比
         if(-positionY > this.themeTopYs[0]  && -positionY < this.themeTopYs[1])
           this.$refs.navbar.currentIndex = 0;
@@ -186,7 +212,51 @@
           this.$refs.navbar.currentIndex = 2;
         if(-positionY > this.themeTopYs[3])
           this.$refs.navbar.currentIndex = 3;
+
+        // 3.根据positionY隐藏或者显示backTop按钮
+        // this.isShowBackTop = -positionY > 1000;
+        this.comparePositionYAnd1000(position.y); //专门把上句包成一个函数以便使用混入
       },
+
+      // 后面通过混入加入
+      /*backTopClick() {
+        this.$refs.scroll.scrollTo(0, 0);
+      },*/
+
+      showNumberSelect() {
+        // 1.显示数量选择弹窗，取到要加入购物车的商品数量
+        this.isRenderNumberSelect = true;
+      },
+
+      changeCartListState(counter) {
+        this.addToCartNum = counter;
+        this.isRenderNumberSelect = false;
+
+        // 2.获取购物车需要展示的信息
+        const product = {};
+        product.iid = this.iid;
+        product.image = this.topImages[0];
+        product.title = this.goodsInfo.title;
+        product.desc = this.goodsInfo.desc;
+        product.price = this.goodsInfo.realPrice;
+        product.count = this.addToCartNum;
+
+        // 3.将商品添加到购物车里边
+        // this.$store.commit(ADD_TO_CART, product);
+        /*this.$store.dispatch('changeCartList', product).then(res => {
+          console.log(res);
+        });*/
+
+        // mapActions中的changeCartList
+        this.changeCartList(product).then(res => {
+          console.log(this.$toast);
+          this.$toast.show(res, 1500);
+        })
+      },
+
+      hideNumSelect() {
+        this.isRenderNumberSelect = false;
+      }
     },
     components: {
       DetailNavBar,
@@ -198,6 +268,9 @@
       DetailParamInfo,
       DetailCommentInfo,
       GoodsList,
+      DetailBottomBar,
+      DetailProductNumberEnsure,
+      // BackTop, // 后面使用了混入
     }
   }
 </script>
@@ -205,19 +278,24 @@
 <style scoped>
   #detail {
     position: relative;
-    z-index: 9;
-    background-color: #fff;
-
     height: 100vh;
+    z-index: 1;/*为了遮住底下的tabControl*/
   }
 
   .detail-nav-bar {
-    position: relative;
-    z-index: 10;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1;
     background-color: #fff;
   }
 
   .content {
-    height: calc(100vh - 44px);
+    position: absolute;
+    top: 47px;
+    bottom: 58px;
+    left: 0;
+    right: 0;
   }
 </style>

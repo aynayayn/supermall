@@ -6,24 +6,26 @@
     <tab-control :titles="['流行','新款','精选']"
                  @tabClick="tabClick"
                  ref="tabControl1"
-                 :class="'tab-control'"
+                 :class="'tab-control-fixed'"
                  v-show="isShowTabControl"></tab-control>
     <scroll class="content"
             ref="scroll"
             :probe-type = "3"
+            @scroll="contentScroll"
             :pull-up-load = "true"
             @pullingUp = "loadMore">
       <home-swiper :banners="banners"
                    @swiperImageLoad="swiperImageLoad"></home-swiper>
       <home-recommend-view :recommends="recommends"></home-recommend-view>
-      <home-feature-view></home-feature-view>
+      <home-feature-view/>
       <tab-control :titles="['流行','新款','精选']"
                    @tabClick="tabClick"
                    ref="tabControl2"></tab-control>
-      <goods-list :goods="showGoods"></goods-list>
+      <goods-list :goods="showGoods"/>
     </scroll>
+
     <back-top
-      @click.native="backClick"
+      @click.native="backTopClick"
       v-show="isShowBackTop"></back-top>
   </div>
 </template>
@@ -38,16 +40,17 @@
   import NavBar from "components/common/navbar/NavBar";
   import TabControl from "components/content/tabControl/TabControl";
   import GoodsList from "components/content/goods/GoodsList";
-  import BackTop from "components/content/backTop/BackTop";
+  // 后面使用了混入
+  // import BackTop from "components/content/backTop/BackTop";
 
   import {getHomeMultidata, getHomeGoods} from "network/home";
   import {debounce} from "common/utils";
   // 三、只emit一个事件并在不同组件中实现各自不同时段的监听【混入操作】 - 第2处代码
-  import {itemListener} from "common/mixin";
+  import {itemImageLoadListener, backTopClickListener} from "common/mixin";
 
   export default {
     name: "Home",
-    mixins: [itemListener],// 三、只emit一个事件并在不同组件中实现各自不同时段的监听【混入操作】 - 第3处代码
+    mixins: [itemImageLoadListener, backTopClickListener],// 三、只emit一个事件并在不同组件中实现各自不同时段的监听【混入操作】 - 第3处代码
     components: {
       Scroll,
       HomeSwiper,
@@ -57,7 +60,7 @@
       NavBar,
       TabControl,
       GoodsList,
-      BackTop,
+      // BackTop, // 后面使用了混入
     },
     data() {
       return {
@@ -69,11 +72,11 @@
           'sell': {page: 0, list: []},
         },
         currentType: 'pop',
-        isShowBackTop: false,
         tabOffsetTop: 0,
         isShowTabControl: false,
         saveY: 0,
         // itemImageLoad: null, // 二、只emit一个事件并在不同组件中实现各自不同时段的监听 - 第2处代码
+        // isShowBackTop: false, // 后面通过混入加入
       }
     },
     computed: {
@@ -99,7 +102,7 @@
       })*/
 
       // 一、先判断当前路由后使用this.$bus.$emit发射不同的事件 - 第2处代码
-      /* const refresh = debounce(this.$refs.scroll.refresh, 500)
+      /* const refresh = debounce(this.$refs.scroll.refresh, 200)
        this.$bus.$on('homeItemImageLoad', () => {
          this.$refs.scroll && refresh();
        })*/
@@ -107,10 +110,15 @@
 
       // 二、只emit一个事件并在不同组件中实现各自不同时段的监听 - 第3处代码 - 后面进行了混入操作
      /*const refresh = debounce(this.$refs.scroll.refresh, 200);
-     this.itemImageLoad = () => {
+     this.$bus.$on('itemImageLoad', () => {
        this.$refs.scroll && refresh();
-     }
-     this.$bus.$on('itemImageLoad', this.itemImageLoad);*/
+     });*/
+     // 为了等一下使用混入，把回调的函数抽出来
+      /*const refresh = debounce(this.$refs.scroll.refresh, 200);
+      this.itemImageLoad = () => {
+        this.$refs.scroll && refresh();
+      }
+      this.$bus.$on('itemImageLoad', this.itemImageLoad);*/
     },
     activated() {
       this.$refs.scroll.refresh();
@@ -119,13 +127,13 @@
       // 二、只emit一个事件并在不同组件中实现各自不同时段的监听 - 第4处代码
       /*this.$bus.$on('itemImageLoad', this.itemImageLoad);*/
     },
-   /* beforeRouteLeave(from, to, next) {
+    /*beforeRouteLeave(from, to, next) {
       this.saveY = this.$refs.scroll.scroll.y;
       next();
     },*/
     deactivated() {
-      // this.saveY = this.$refs.scroll.scroll.y;
-      this.saveY = this.$store.state.scrollHeight;
+      // this.saveY = this.$store.state.scrollHeight;
+      this.saveY = this.$refs.scroll.scroll.y;
       console.log(this.saveY);
 
       // 二、只emit一个事件并在不同组件中实现各自不同时段的监听 - 第5处代码
@@ -162,14 +170,17 @@
         this.$refs.tabControl1.currentIndex = value;
         this.$refs.tabControl2.currentIndex = value;
       },
-      backClick() {
+      // 后面通过混入加入
+      /*backTopClick() {
         // 在500毫秒之内滚到最上方
         this.$refs.scroll.scrollTo(0, 0, 500);
-      },
-     /* contentScroll() {
-        this.isShow = !this.isShow;
       },*/
-       loadMore() {
+      contentScroll(position) {
+        this.isShowTabControl = -position.y > this.tabOffsetTop;
+        // this.isShowBackTop = -position.y > 1000;
+        this.comparePositionYAnd1000(position.y); //专门把上句包成一个函数以便使用混入
+      },
+      loadMore() {
         this.getHomeGoods(this.currentType);
         // 2s后才finishPullUp，才能进行下一次上拉加载
         setTimeout(() => {
@@ -207,64 +218,48 @@
           this.$refs.scroll.scroll.refresh();
         }
       }*/
-      "$store.state.scrollHeight": {
-        deep: true,
+      /*"$store.state.scrollHeight": {
+        deep: false,
         handler: function(newVal) {
           this.isShowBackTop = -newVal > 1000;
           this.isShowTabControl = -newVal > this.tabOffsetTop;
           // console.log(newVal);
           // console.log(this.isTabFixed);
         }
-      }
+      }*/
     }
   }
 </script>
 
 <style scoped>
-  /*#home {
-    !*padding-top: 44px;
-    padding-bottom: 56px;*!
-
-    height: 100vh;
-  }*/
   #home {
-    /*padding-top: 44px;*/
-    height: 100vh;
     position: relative;
+    height: 100vh;
+    z-index: 0;
   }
   .home-nav {
     background-color: var(--color-tint);
     color: #fff;
-
-    /*position: fixed;
+    position: fixed;
     left: 0;
     right: 0;
     top: 0;
-    z-index: 2;*/
+    z-index: 1;
   }
-  /*.tab-control {
-    position: sticky;
-    top: 44px;
-
-    z-index: 2;
-  }*/
- /* .content {
-    !*vh:视口宽度单位 。设置显示页面滑动的局部区域的高度。*!
-    height: calc(100vh - 93px);
-    margin-top: 44px;
-  }*/
-
   .content {
-    overflow: hidden;
-
     position: absolute;
     top: 44px;
     bottom: 49px;
     left: 0;
     right: 0;
   }
-  .tab-control {
-    position: relative;
-    z-index: 3;
+  .tab-control-fixed {
+    position: fixed;
+    top: 44px;
+    left: 0;
+    right: 0;
+
+    z-index: 1;
   }
+
 </style>

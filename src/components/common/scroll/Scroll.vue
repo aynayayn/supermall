@@ -25,18 +25,21 @@
         scroll: null,
       }
     },
-    updated() {
+    mounted() {
       this.scroll = new BScroll(this.$refs.wrapper, {
         probeType: this.probeType,
         pullUpLoad: this.pullUpLoad,
-        // 用于使得div，span等之类的标签可以被点击
-        click: true
+
+        // 以下三种属性写死
+        click: true, // 用于使得div，span等之类的标签可以被点击
+        mouseWheel: true,
+        observeDOM: true,
       })
 
       // 监听滚动的位置
       if(this.probeType == 2 || this.probeType == 3){
         this.scroll.on('scroll', (position) => {
-          this.$store.commit('setScrollHeight',position.y)
+          // this.$store.commit('setScrollHeight',position.y)
           this.$emit('scroll', position);
         })
       }
