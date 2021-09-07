@@ -8,6 +8,7 @@
     </div>-->
     <div v-for="(item, index) in titles"
          @click="itemClick(index)"
+         :key="index"
          :class="{activeClass: index === currentIndex}"
          class="tab-control-item">
       <span>{{item}}</span>
@@ -36,8 +37,12 @@
       itemClick(val) {
         this.currentIndex = val;
         this.$emit('tabClick', val);
+      },
+      resetCurrentIndex() {
+        this.currentIndex = 0;
+        this.$emit('tabClick', 0);
       }
-    }
+    },
   }
 </script>
 

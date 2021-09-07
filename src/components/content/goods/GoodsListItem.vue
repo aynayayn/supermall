@@ -33,6 +33,7 @@
         }*/
 
         // 二、只emit一个事件并在不同组件中实现各自不同时段的监听 - 第1处代码
+        // 三、只emit一个事件并在不同组件中实现各自不同时段的监听【混入操作】 - 第2处代码
         this.$bus.$emit('itemImageLoad');
       },
       itemClick() {
@@ -44,7 +45,7 @@
     },
     computed: {
       showImage() {
-        return this.goodsItem.image || this.goodsItem.show.img
+        return this.goodsItem.image || this.goodsItem.img || this.goodsItem.show.img;
       }
     }
   }

@@ -34,7 +34,10 @@
         click: true, // 用于使得div，span等之类的标签可以被点击
         mouseWheel: true,
         observeDOM: true,
-      })
+        // 使不用F5刷新就能直接进行滑动
+        disableMouse: false, // 启用鼠标拖动
+        disableTouch: false, // 启用手指触摸
+      });
 
       // 监听滚动的位置
       if(this.probeType == 2 || this.probeType == 3){
