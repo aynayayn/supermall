@@ -24,7 +24,7 @@ FastClick.attach(document.body)
 Vue.use(VueLazyLoad, {
   // 占位的图片
   loading: require('./assets/img/common/placeholder.png')
-})
+});
 
 new Vue({
   render: h => h(App),

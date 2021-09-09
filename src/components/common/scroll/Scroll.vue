@@ -16,7 +16,7 @@
         default: 1
       },
       pullUpLoad: {
-        type: Boolean,
+        type: [Boolean, Object],
         default: false,
       }
     },

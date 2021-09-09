@@ -24,7 +24,7 @@
       path: String,
       activeColor: {
         type: String,
-        default: 'deepPink'
+        default: 'darkOrange'
       }
     },
     computed: {
@@ -50,6 +50,7 @@
     text-align: center;
     height: 49px;
     font-size: 14px;
+    color: #000000;
   }
 
   .tab-bar-item img {

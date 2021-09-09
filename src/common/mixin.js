@@ -12,16 +12,23 @@ export const itemImageLoadListener = {
     // 判断条件是在展示分类子类的图片的时候加的，避免this.$refs.scroll还不存在的情况导致newRefresh为null
     if(this.$refs.scroll) {
       this.newRefresh = debounce(this.$refs.scroll.refresh, 200);
+      this.itemImageLoad = () => {
+        this.$refs.scroll && this.newRefresh();
+      }
+      this.$bus.$on('itemImageLoad', this.itemImageLoad);
     }
-    this.itemImageLoad = () => {
-      this.$refs.scroll && this.newRefresh();
-    }
-    this.$bus.$on('itemImageLoad', this.itemImageLoad);
+
     console.log('我是混入的内容');
   },
   // 在展示分类子类的图片的时候加的，避免this.$refs.scroll还不存在的情况导致newRefresh为null
   updated() {
-    this.newRefresh = debounce(this.$refs.scroll.refresh, 200);
+    if(this.$refs.scroll) {
+      this.newRefresh = debounce(this.$refs.scroll.refresh, 200);
+      this.itemImageLoad = () => {
+        this.$refs.scroll && this.newRefresh();
+      };
+      this.$bus.$on('itemImageLoad', this.itemImageLoad);
+    }
   },
   // 专为keep-alive中的路由视图准备
   activated() {
@@ -29,7 +36,13 @@ export const itemImageLoadListener = {
     /*this.itemImageLoad = () => {
       this.$refs.scroll && this.newRefresh();
     }*/
-    this.$bus.$on('itemImageLoad', this.itemImageLoad);
+    if(this.$refs.scroll) {
+      this.newRefresh = debounce(this.$refs.scroll.refresh, 200);
+      this.itemImageLoad = () => {
+        this.$refs.scroll && this.newRefresh();
+      }
+      this.$bus.$on('itemImageLoad', this.itemImageLoad);
+    }
     console.log('我是混入的内容');
   }
 }

@@ -7,28 +7,38 @@
       <div class="scroll-left">
         <scroll class="content-left">
           <side-bar-menu :list="categories"
-                         @selectItem="sidebarItemClick"></side-bar-menu>
+                         @selectItem="sidebarItemClick"
+                         ref="sideBarMenu"/>
         </scroll>
       </div>
       <div class="scroll-right">
+        <!--做顶替的tab-control-->
+        <tab-control class="tab-control-fixed"
+                     :titles="['流行', '新款', '销量']"
+                     v-show="isShowTabControl"
+                     @tabClick="tabClick"
+                     ref="tabControl2" />
         <scroll class="content-right"
                 ref="scroll"
                 :probe-type="3"
-                @scroll="contentScroll">
+                @scroll="contentScroll"
+                :pull-up-load="{threshold: -50}"
+                @pullingUp="changeMenuCurIndex">
           <three-column-list
             :list="categoryData[currentIndex].subcategories.list"
             :if-subcategories-show="true" />
-          <tab-control class="tab-control"
+          <tab-control class="tab-control-in-scroll"
                        :titles="['流行', '新款', '销量']"
                        @tabClick="tabClick"
-                       ref="tabControl" />
-          <goods-list :goods="categoryData[currentIndex].categoryDetail[currentType]" />
+                       ref="tabControl1"
+                       v-cloak />
+          <goods-list :goods="categoryData[currentIndex].categoryDetail[currentType]"
+                      class="goods-list"/>
         </scroll>
       </div>
     </div>
     <back-top v-show="isShowBackTop"
               @click.native="backTopClick"></back-top>
-
   </div>
 </template>
 
@@ -61,17 +71,35 @@
         currentIndex: -1,
         tabOffsetTop: 0,
         isShowTabControl: false,
+        saveY: 0,
         currentType: 'pop',
+        screenWidth: '',
+        screenHeight: ''
       }
     },
     created() {
       // 1.请求类别名称列表 和 第一个类别的子类别及详细数据
       this._getCategories();
     },
+    updated() {
+      if(this.$refs.scroll) {
+        this.$refs.scroll.refresh();
+
+        // 在图片加载的过程好像也会执行这里边的函数，且确定在页面改变之后会进行重新计算！！！
+        if(this.$refs.tabControl1) {
+          this.tabOffsetTop = this.$refs.tabControl1.$el.offsetTop;
+          console.log('tabOffsetTop:'+this.tabOffsetTop);
+        }
+      }
+    },
     activated() {
-      this.$refs.scroll.refresh();
+      if(this.$refs.scroll) {
+        this.$refs.scroll.refresh();
+        this.$refs.scroll.scrollTo(0, this.saveY, 0);
+      }
     },
     deactivated() {
+      this.saveY = this.$refs.scroll.scroll.y;
       this.$bus.$off('itemImageLoad', this.itemImageLoad);
     },
     methods: {
@@ -122,7 +150,12 @@
         // 请求对应类别的子类别及详细数据
         this._getSubcategories(this.currentIndex);
         // 在tab-control组件中把它的currentIndex重置为0，并且通过事件把currentIndex发出来，使得this.currentType='pop'
-        this.$refs.tabControl.resetCurrentIndex();
+        this.$refs.tabControl1.resetCurrentIndex();
+        this.$refs.tabControl2.currentIndex = 0;
+
+        // 滚到最上方
+        this.$refs.scroll.scrollTo(0, 0, 0);
+        this.isShowTabControl = false;
       },
       contentScroll(position) {
         // console.log(position.y);
@@ -142,7 +175,19 @@
             this.currentType = 'sell';
             break;
         }
-      }
+
+        this.$refs.tabControl1.currentIndex = value;
+        this.$refs.tabControl2.currentIndex = value;
+      },
+
+      // 拉到scroll的底部继续往上拉时会进入下一个分类
+      changeMenuCurIndex() {
+        this.$refs.sideBarMenu.changeCurIndexAndEmit();
+        // 1.5s后才finishPullUp，才能进行下一次上拉加载
+        setTimeout(() => {
+          this.$refs.scroll.finishPullUp();
+        }, 1500)
+      },
     },
   }
 </script>
@@ -163,23 +208,26 @@
     flex: 1;
   }
   .category-content .scroll-left .content-left {
-    position: fixed;
+    position: absolute;
     top: 44px;
     bottom: 49px;
     left: 0;
 
     width: 100px;
-
     z-index: -1;
   }
   .category-content .scroll-right .content-right {
-    position: fixed;
+    position: absolute;
     top: 44px;
     bottom: 49px;
 
     z-index: -1;
   }
-  .tab-control {
+  .tab-control-in-scroll {
     margin-top: 20px;
+  }
+
+  [v-cloak] {
+    display: none;
   }
 </style>

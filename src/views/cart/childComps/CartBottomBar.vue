@@ -94,7 +94,11 @@
 
 <style scoped>
   .bottom-bar {
-    position: relative;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 49px;
+
     height: 40px;
     background-color: #eee;
 
@@ -129,7 +133,7 @@
 
     width: 86px;
 
-    background-color: red;
+    background-color: var(--color-high-text);
     text-align: center;
     color: #fff;
   }

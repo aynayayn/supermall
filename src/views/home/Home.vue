@@ -1,7 +1,7 @@
 <template>
   <div id="home">
     <nav-bar class="home-nav">
-      <div slot="center">购物街</div>
+      <div slot="center">商城首页</div>
     </nav-bar>
     <tab-control :titles="['流行','新款','精选']"
                  @tabClick="tabClick"
@@ -240,6 +240,7 @@
   .home-nav {
     background-color: var(--color-tint);
     color: #fff;
+    font-weight: bold;
     position: fixed;
     left: 0;
     right: 0;

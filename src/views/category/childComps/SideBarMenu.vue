@@ -3,7 +3,6 @@
     <ul>
       <li v-for="(item, index) in list"
           :class="{isClick: currentIndex === index}"
-          :key="index"
           @click="itemClick(index)">{{item.title}}</li>
     </ul>
   </div>
@@ -29,7 +28,15 @@
       itemClick(val) {
         this.currentIndex = val;
         this.$emit('selectItem', val);
-      }
+
+        console.log('testClick');
+      },
+      changeCurIndexAndEmit() {
+        if(this.currentIndex < this.list.length - 1) {
+          this.currentIndex++;
+          this.$emit('selectItem', this.currentIndex);
+        }
+      },
     },
   }
 </script>
@@ -48,5 +55,7 @@
     background-color: var(--color-background);
     color: var(--color-tint);
     font-weight: bold;
+
+    border-left: 4px var(--color-high-text) solid;
   }
 </style>

@@ -38,6 +38,7 @@
     background-color: var(--color-tint);
     color: #ffffff;
     /*font-weight: 700;*/
+    font-weight: bold;
 
     position: fixed;
     top: 0;

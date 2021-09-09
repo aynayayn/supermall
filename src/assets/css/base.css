@@ -5,9 +5,9 @@
   /*提前定义了些变量*/
   --color-text: #666;
   /*文字高亮时的颜色*/
-  --color-high-text: #ff5777;
+  --color-high-text: #FF8C00;
   /*导航的地方的背景颜色*/
-  --color-tint: #ff8198;
+  --color-tint: #000000;
   /*也是背景颜色*/
   --color-background: #fff;
   --font-size: 14px;
